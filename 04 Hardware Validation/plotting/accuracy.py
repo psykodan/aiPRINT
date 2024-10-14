@@ -14,7 +14,7 @@ for m in models:
                 continue
             d = []
             for i in range(1,6,1):
-                f = open(f"accuracy/{ds}/{pt}/{m}/{i}.txt")
+                f = open(f"05 Data/validation/detection/accuracy/{ds}/{pt}/{m}/{i}.txt")
                 f.readline()
                 total = 0
                 tp = 0
@@ -67,13 +67,15 @@ edges=['seagreen','seagreen','seagreen','seagreen','seagreen','seagreen','seagre
 #plt.show()
 fig, ax = plt.subplots(figsize =(8, 4))
 #sns.boxplot(x="Model",y="Accuracy (%)",data=data_df,palette="Paired")
-bar = sns.barplot(data=data_df, x="model", y="accuracy", hue="training_type", palette=['lightgreen','darkgray'],order=["VGG19 line","VGG19 infill","MobileNet line","MobileNet infill", "ResNet50 line","ResNet50 infill","Xception line","Xception infill"])
+bar = sns.barplot(data=data_df, x="model", y="accuracy", hue="training_type", palette=['lightgreen','lightcoral'],order=["VGG19 line","VGG19 infill","MobileNet line","MobileNet infill", "ResNet50 line","ResNet50 infill","Xception line","Xception infill"])
+'''
 for i,thisbar in enumerate(bar.patches):
     print(i)
     print(thisbar)
     # Set a different hatch for each bar
     thisbar.set_hatch(hatches[i])
     thisbar.set_edgecolor(edges[i])
+'''
 plt.title("Validation Accuracy Running on Hardware")
 plt.xlabel('Model') 
 plt.ylabel('Accuracy (%)') 

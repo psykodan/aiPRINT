@@ -6,66 +6,123 @@ import random
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 import keras
-run = "synth"
 
+datatypes = ["synth","real","transfer"]
+model_names = ["vgg19","MobileNetV3Small","Xception","ResNet50V2"]
 
-models ={"vgg19_line" : tf.keras.models.load_model('vgg19_line.h5'),
-		 
-         "MobileNetV3_line" : tf.keras.models.load_model('MobileNetV3Small_line.h5'),
-		 
-         "ResNet50_line" : tf.keras.models.load_model('ResNet50V2_line.h5'),
-		
-         "Xception_line" : tf.keras.models.load_model('Xception_line.h5')}
-class_names=["good","over","under"]
-dataset_path_test = 'real_data/augmented_real_line/test/'
-test_ds = tf.keras.utils.image_dataset_from_directory(
-    dataset_path_test,
-    label_mode="categorical",
-    seed=1337,
-    image_size=(224, 224),
-    batch_size=64)
-
-#test_ds = test_ds.skip(340)
-
-
-class_names=["over","good","under"]
-results = []
-for m in models:
-    num_correct = 0
-
-    for repeat in range(1):
-        test_images = []
-        test_labels = []
-        #for test in range(100):
-        for x,y in test_ds.as_numpy_iterator(): 
-            if len(test_images) < 512:
-                for i in range(64):
-                    image = x[i].astype("uint8")
-                    test_images.append(image)
-                    test_labels.append(y[i])
-        labels=[]
-        for num, t_img in enumerate(test_images[512*repeat:512*(repeat+1)]):  
-
-            predictions = models[m].predict(np.expand_dims(t_img, axis=0), verbose = 0)
-            score = tf.nn.softmax(predictions[0])
-            labels.append(score)
-        predicted_labels = np.argmax(labels, axis=1)
-        true_labels = np.argmax(test_labels, axis=1)
-        conf_matrix = confusion_matrix(true_labels, predicted_labels,labels=[1,0,2])
-        print(conf_matrix)
-
-        # Plot the confusion matrix using seaborn and matplotlib
-        plt.figure(figsize=(2, 2))
-        g=sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False,
-                    xticklabels=class_names,
-                    yticklabels=class_names)
-        plt.title(f'{m}',fontsize=10)
-        plt.xlabel('Predicted Label')
-        plt.ylabel('True Label')
-        #plt.tight_layout()
-        #plt.savefig(f"real-{m}_CM.png",dpi=300)
-        plt.show()
+for name in range(4):
+    model_line = [tf.keras.models.load_model(f'05 Data/models/results-synth/{model_names[name]}_line.h5'),
+                tf.keras.models.load_model(f'05 Data/models/results-real/{model_names[name]}_line.h5'),
+                tf.keras.models.load_model(f'05 Data/models/results-transfer/{model_names[name]}_line.h5')]
+    model_infill = [tf.keras.models.load_model(f'05 Data/models/results-synth/{model_names[name]}_infill.h5'),
+                    tf.keras.models.load_model(f'05 Data/models/results-real/{model_names[name]}_infill.h5'),
+                    tf.keras.models.load_model(f'05 Data/models/results-transfer/{model_names[name]}_infill.h5')]
+    batch_size = 64
+    img_h = 224
+    img_w = 224
+    for run in range(3):
+        if run == 0:
+            dataset_path_test_line = '05 Data/datasets/synth_data/augmented_synth_line/test'
+            dataset_path_test_infill = '05 Data/datasets/synth_data/augmented_synth_infill/test'
             
+        else:
+            dataset_path_test_line = '05 Data/datasets/real_data/augmented_real_line/test'
+            dataset_path_test_infill = '05 Data/datasets/real_data/augmented_real_infill/test'
+            
+        test_ds_line = tf.keras.utils.image_dataset_from_directory(
+            dataset_path_test_line,
+            label_mode="categorical",
+            seed=1678,
+            image_size=(img_h, img_w),
+            batch_size=batch_size,
+        )
+        test_ds_infill = tf.keras.utils.image_dataset_from_directory(
+            dataset_path_test_infill,
+            label_mode="categorical",
+            seed=1678,
+            image_size=(img_h, img_w),
+            batch_size=batch_size,
+        )
+
+    #test_ds = test_ds.skip(340)
+
+
+        class_names=["+","o","-"]
+
+        if run == 0:
+            colour = sns.light_palette("cornflowerblue", as_cmap=True)
+        elif run == 1:
+            colour = sns.light_palette("lightgreen", as_cmap=True)
+        else:
+            colour = sns.light_palette("lightcoral", as_cmap=True)
+        num_correct = 0
+
+        for repeat in range(1):
+            test_images = []
+            test_labels = []
+            #for test in range(100):
+            for x,y in test_ds_line.as_numpy_iterator(): 
+                if len(test_images) < 512:
+                    for i in range(64):
+                        image = x[i].astype("uint8")
+                        test_images.append(image)
+                        test_labels.append(y[i])
+            labels=[]
+            for num, t_img in enumerate(test_images[512*repeat:512*(repeat+1)]):  
+
+                predictions = model_line[run].predict(np.expand_dims(t_img, axis=0), verbose = 0)
+                score = tf.nn.softmax(predictions[0])
+                labels.append(score)
+            predicted_labels = np.argmax(labels, axis=1)
+            true_labels = np.argmax(test_labels, axis=1)
+            conf_matrix = confusion_matrix(true_labels, predicted_labels,labels=[1,0,2])
+            print(conf_matrix)
+
+            # Plot the confusion matrix using seaborn and matplotlib
+            plt.figure(figsize=(1, 1))
+            g=sns.heatmap(conf_matrix, annot=True, fmt='d', cmap=colour, cbar=False,
+                        xticklabels=class_names,
+                        yticklabels=class_names,annot_kws={"size": 8})
+            #plt.title(f'{m}',fontsize=10)
+            #plt.xlabel('Predicted Label')
+            #plt.ylabel('True Label')
+            #plt.tight_layout()
+            plt.savefig(f"05 Data/evaluation/confusion matrix/line-{datatypes[run]}-{model_names[name]}_CM.png",dpi=300)
+            #plt.show()
+
+        for repeat in range(1):
+            test_images = []
+            test_labels = []
+            #for test in range(100):
+            for x,y in test_ds_infill.as_numpy_iterator(): 
+                if len(test_images) < 512:
+                    for i in range(64):
+                        image = x[i].astype("uint8")
+                        test_images.append(image)
+                        test_labels.append(y[i])
+            labels=[]
+            for num, t_img in enumerate(test_images[512*repeat:512*(repeat+1)]):  
+
+                predictions = model_infill[run].predict(np.expand_dims(t_img, axis=0), verbose = 0)
+                score = tf.nn.softmax(predictions[0])
+                labels.append(score)
+            predicted_labels = np.argmax(labels, axis=1)
+            true_labels = np.argmax(test_labels, axis=1)
+            conf_matrix = confusion_matrix(true_labels, predicted_labels,labels=[1,0,2])
+            print(conf_matrix)
+
+            # Plot the confusion matrix using seaborn and matplotlib
+            plt.figure(figsize=(1, 1))
+            g=sns.heatmap(conf_matrix, annot=True, fmt='d', cmap=colour, cbar=False,
+                        xticklabels=class_names,
+                        yticklabels=class_names,annot_kws={"size": 8})
+            #plt.title(f'{m}',fontsize=10)
+            #plt.xlabel('Predicted Label')
+            #plt.ylabel('True Label')
+            #plt.tight_layout()
+            plt.savefig(f"05 Data/evaluation/confusion matrix/infill-{datatypes[run]}-{model_names[name]}_CM.png",dpi=300)
+            #plt.show()
+                
 
 
 
