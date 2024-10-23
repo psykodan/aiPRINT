@@ -44,7 +44,7 @@ fig, ax = plt.subplots(figsize=(6, 6))
 sns.stripplot(x='Category', y='Values', data=combined_data_long_with_infill_under,
               ax=ax, size=10, edgecolor="black", linewidth=1, jitter=False, dodge=True, hue='Dataset',palette='rocket')
 sns.stripplot(x='Category', y='Values', data=highlighted_points_long_with_infill_under,
-              ax=ax, size=10, edgecolor="black", linewidth=1, jitter=False, dodge=True, hue='Label',marker="D",palette='rocket')
+              ax=ax, size=10, color="white", linewidth=2, jitter=False, dodge=True, hue='Label',marker="D",palette='crest')
 
 '''
 sns.stripplot(x='Category', y='Values', data=combined_data_long_with_infill_under[combined_data_long_with_infill_under['Dataset'] == 'Line Over Extrusion Test'],
